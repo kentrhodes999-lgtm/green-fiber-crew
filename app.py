@@ -1,107 +1,106 @@
+# SQLite fix for free cloud deployment engines
+try:
+    import sys
+    import pysqlite3
+    sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+except ImportError:
+    pass
+
 import streamlit as st
 from crewai import Agent, Task, Crew
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 
-# Platform UI Configuration
-st.set_page_config(page_title="Green Fiber Solutions - AI Command Center", layout="wide")
+st.set_page_config(page_title="Green Fiber Solutions Control Center", layout="wide")
 
-st.title("🚀 Green Fiber Solutions")
-st.subheader("Autonomous C-Suite Command Platform")
+st.title("⚡ Green Fiber Solutions")
+st.subheader("Unrestricted Azure-Powered C-Suite Platform")
 st.write("---")
 
-# Sidebar for Secure Authentication
-st.sidebar.header("🔑 Authentication")
-api_key = st.sidebar.text_input("OpenAI API Key", type="password", help="Your key is only used to power this session.")
+# Secure Sidebar Credentials for Azure AI Foundry
+st.sidebar.header("🔑 Azure AI Credentials")
+azure_key = st.sidebar.text_input("Azure API Key", type="password")
+azure_endpoint = st.sidebar.text_input("Azure Endpoint URL", placeholder="https://your-resource.openai.azure.com/")
+azure_deployment = st.sidebar.text_input("Deployment Name", placeholder="e.g., gpt-4o")
 
 st.sidebar.write("---")
-st.sidebar.markdown("""
-### 📊 System Status
-* **Core Network:** Connected
-* **Agent Sync:** 100% Operational
-* **Capital Burn Rate:** $0.00/mo
+st.sidebar.markdown(f"""
+### 📊 Enterprise Metadata
+* **Entity Status:** Active (EIN Verified)
+* **Regional Node:** Denver / Aurora CO
+* **Compute Source:** Microsoft Azure Credits
+* **Operational Mode:** Unrestricted
 """)
 
-# Main Workspace Layout
-if not api_key:
-    st.warning("⚠️ Please enter your OpenAI API Key in the sidebar to activate your AI crew.")
+if not (azure_key and azure_endpoint and azure_deployment):
+    st.warning("⚠️ Access locked. Please enter your Azure OpenAI credentials in the sidebar to activate your crew.")
 else:
-    # Initialize LLM with user's key
-    llm = ChatOpenAI(model="gpt-4", api_key=api_key, temperature=0.8)
-
-    # Define the Agent Pool
-    agents = {
-        "CEO Agent": Agent(
-            role="CEO",
-            goal="Generate $100K revenue in 30 days with $0 capital",
-            backstory="Aggressive, hyper-focused on revenue, rapid execution, and non-dilutive funding.",
-            llm=llm,
+    try:
+        # Streamlined initialization to completely bypass Pydantic configuration errors
+        llm = AzureChatOpenAI(
+            azure_deployment=azure_deployment,
+            api_key=azure_key,
+            azure_endpoint=azure_endpoint,
+            api_version="2024-05-01-preview",
+            temperature=0.7,
             verbose=True
-        ),
-        "VP Sales": Agent(
+        )
+
+        # Instantiate the Virtual C-Suite
+        ceo = Agent(
+            role="Chief Executive Officer",
+            goal="Drive immediate $100K MVR revenue pipeline using zero-capital Colorado corporate frameworks.",
+            backstory="Hyper-aggressive corporate strategist focused on immediate cash-flow realization, local contract arbitrage, and scaling B2B solutions.",
+            llm=llm,
+            allow_delegation=False
+        )
+
+        sales = Agent(
             role="VP of Sales",
-            goal="Close $100K in B2B environmental and fiber services contracts within 30 days",
-            backstory="Expert closer. Specializes in pain-point selling, high-volume cold outreach, and rapid closing cycles.",
+            goal="Scrape, target, and close high-value B2B environmental and infrastructure accounts along the I-70 corridor.",
+            backstory="Elite closer. Expert in bypassing corporate gatekeepers, pain-point pitching, and structured upfront retainer execution.",
             llm=llm,
-            verbose=True
-        ),
-        "VP Operations": Agent(
+            allow_delegation=False
+        )
+
+        operations = Agent(
             role="VP of Operations",
-            goal="Deliver services flawlessly with zero upfront infrastructure costs",
-            backstory="Master of white-labeling, contractor networks, and open-source software integration.",
+            goal="Fulfill corporate contracts flawlessly using white-label networks and open-source infrastructure.",
+            backstory="Logistics expert. Specializes in scaling physical and digital delivery systems with zero upfront expenditure.",
             llm=llm,
-            verbose=True
-        ),
-        "VP Finance": Agent(
-            role="VP of Finance",
-            goal="Optimize cash flow, structure upfront retainers, and maintain positive runway",
-            backstory="Strict cash-flow manager. Expert in revenue-based financing and minimizing operational burn.",
-            llm=llm,
-            verbose=True
+            allow_delegation=False
         )
-    }
 
-    # Task Execution Interface
-    col1, col2 = st.columns([1, 2])
+        # Interface UI Layout
+        col1, col2 = st.columns([1, 2])
 
-    with col1:
-        st.markdown("### 🤖 Select Active Agent")
-        selected_agent_name = st.selectbox("Choose who to command:", list(agents.keys()))
-        active_agent = agents[selected_agent_name]
-        
-        st.info(f"**Current Objective:** {active_agent.goal}")
-
-    with col2:
-        st.markdown("### 📝 Issue Execution Order")
-        user_directive = st.text_area(
-            f"What should the {selected_agent_name} execute right now?",
-            placeholder="e.g., Draft a high-velocity cold email sequence targeting Denver data centers or structure a 48-hour cash flow bridge plan."
-        )
-        
-        execute_button = st.button("🚀 Execute Command", type="primary")
-
-    # Live Terminal Output
-    if execute_button and user_directive:
-        st.write("---")
-        st.markdown("### 📟 Live Terminal Readout")
-        
-        with st.spinner(f"The {selected_agent_name} is processing your directive..."):
-            # Programmatically construct the task based on user input
-            execution_task = Task(
-                description=user_directive,
-                expected_output="Direct, high-fidelity, PhD-level professional execution artifact without conversational filler.",
-                agent=active_agent
-            )
+        with col1:
+            st.markdown("### 🤖 Activate Agent Node")
+            target_agent = st.selectbox("Select Agent to Command:", ["CEO", "VP Sales", "VP Operations"])
             
-            # Assemble the single-agent crew for instant execution
-            crew = Crew(
-                agents=[active_agent],
-                tasks=[execution_task],
-                verbose=True
-            )
+            agent_mapping = {"CEO": ceo, "VP Sales": sales, "VP Operations": operations}
+            active_agent = agent_mapping[target_agent]
+
+        with col2:
+            st.markdown("### 📥 Input Operational Directive")
+            user_order = st.text_area("Issue explicit directive:", placeholder="e.g., Draft the I-70 corridor cultivation hit-list.")
+            launch_execution = st.button("🚀 Fire Execution Sequence", type="primary")
+
+        if launch_execution and user_order:
+            st.write("---")
+            st.markdown("### 📟 Live Process Streaming")
             
-            # Run and return response
-            result = crew.kickoff()
-            
-            st.success("Execution Complete.")
-            st.markdown(f"### 📥 {selected_agent_name} Response Payload")
-            st.markdown(result)  
+            with st.spinner("Agent running live analytics execution..."):
+                task = Task(
+                    description=user_order,
+                    expected_output="Direct, elite, production-grade operational payload with zero conversational filler.",
+                    agent=active_agent
+                )
+                crew = Crew(agents=[active_agent], tasks=[task], verbose=True)
+                output = crew.kickoff()
+                
+                st.success("Execution sequence complete.")
+                st.markdown("### 📦 Output Payload Received")
+                st.markdown(output)
+                
+    except Exception as e:
+        st.error(f"Initialization Error: {str(e)}")
